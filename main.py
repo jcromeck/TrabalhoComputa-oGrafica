@@ -17,11 +17,11 @@ def encontrarRoiPlaca(img):
 
     #Filtro Desfoque
     desfoque = cv2.GaussianBlur(cinza, (5,5),0)
-    imgWindows("Filtro2", desfoque)
+    imgWindow("Filtro2", desfoque)
 
     #Filtro Canny
     edged = cv2.Canny(desfoque, 75,200)
-    imgWindows("Filtro3", edged)
+    imgWindow("Filtro3", edged)
 
     #Contornar
     screenCnt = contourPlate(edged)
@@ -44,6 +44,8 @@ def encontrarRoiPlaca(img):
     config = r'-c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 --psm 11'
 
     saida = pytesseract.image_to_string(cropped, lang='eng', config=config)
+    saida = subRegex(saida)
+            
     print("Placa:" +saida)
 
     
@@ -73,15 +75,43 @@ def contourPlate(edged):
         cv2.drawContours(img, [screenCnt], -1,(0,0,255),3)
     return screenCnt
 
+def isNumber(value):
+    try:
+         float(value)
+    except ValueError:
+         return False
+    return True
 
+def subRegex(saida):
+    saidaC = list(saida)
+    count = 0
+    for n in range(len(saida)):
+        if (isNumber(saida[n])== True):
+            if (n == 0 or n == 1 or n == 2 or n == 4):
+                if(saida[n] == "4"):
+                    saidaC[n] = "G"
+        else:
+            if(n == 3 or n == 5 or n == 6):
+                if(saida[n] == "S"):
+                    if(count == 0):
+                        saidaC[n] = "3"
+                        count = 1
+                    else:
+                        saidaC[n] = "5"
+                if(saida[n] == "A"):
+                    saidaC[n] = "1"
+                if(saida[n] == "D"):
+                    saidaC[n] = "9"
+                if(saida[n] == "G"):
+                    saidaC[n] = "4"
+                if(saida[n] == "Z"):
+                    saidaC[n] = "2"
+    saida = saidaC[0]+saidaC[1]+saidaC[2]+saidaC[3]+saidaC[4]+saidaC[5]+saidaC[6]
+    return saida
 if __name__ == "__main__":
-    img = cv2.imread("data/carro1.jpg")
+    #img = cv2.imread("data/carro1.jpg")
     #img = cv2.imread("data/carro2.jpg")
     #img = cv2.imread("data/carro3.jpg")
     #img = cv2.imread("data/carro4.jpg")
 
     encontrarRoiPlaca(img)
-    print(len(ocr))
-    print(ocr)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
